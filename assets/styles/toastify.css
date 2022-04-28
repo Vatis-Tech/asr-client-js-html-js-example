@@ -1,0 +1,19 @@
+.toastify.error {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+}
+
+.toastify.warning {
+  background: #fff7ed !important;
+  color: #9a3412 !important;
+}
+
+.toastify.info {
+  background: #ecfeff !important;
+  color: #155e75 !important;
+}
+
+.toastify.success {
+  background: #f7fee7 !important;
+  color: #3f6212 !important;
+}
