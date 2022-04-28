@@ -5,7 +5,7 @@
 ![GitHub issues open](https://img.shields.io/github/issues/Vatis-Tech/asr-client-js-html-js-example.svg)
 ![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/Vatis-Tech/asr-client-js-html-js-example.svg)
 
-<div align="center"><img src="https://github.com/Vatis-Tech/asr-client-js/blob/main/github-assets/logos/logo.png?raw=true" alt="@vatis-tech/asr-client-js"/></div>
+<div align="center"><img src="https://github.com/Vatis-Tech/asr-client-js-html-js-exempla/blob/main/assets/img/asr-client-js-html-js-example.png?raw=true" alt="asr-client-js-html-js-example"/></div>
 
 ### Contents
 
