@@ -1,6 +1,6 @@
 # Vatis Tech - HTML & JavaScript Example
 
-![version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![GitHub issues open](https://img.shields.io/github/issues/Vatis-Tech/asr-client-js-html-js-example.svg)
 ![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/Vatis-Tech/asr-client-js-html-js-example.svg)
@@ -27,7 +27,7 @@
 
 ## Notes
 
-The version of `@vatis-tech/asr-client-js` used in this example, is **v1.2.1**.
+The version of `@vatis-tech/asr-client-js` used in this example, is **v1.3.0-next.3**.
 
 ## Browser Support
 

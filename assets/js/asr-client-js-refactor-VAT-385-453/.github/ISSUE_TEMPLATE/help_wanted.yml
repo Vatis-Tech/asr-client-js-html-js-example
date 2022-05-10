@@ -13,11 +13,27 @@ body:
     id: version
     attributes:
       label: Version
-      description: Please specify what version of `asr-client-js-html-js-example` do you want to use.
+      description: Please specify what version of `@vatis-tech/asr-client-js` do you want to use.
       multiple: true
       options:
-        - 1.0.0
+        - 1.2.2
+        - 1.2.1
+        - 1.2.1-rc.1
+        - 1.2.1-rc.0
+        - 1.2.0
+        - 1.1.1
         - 1.1.0
+        - 1.1.0-rc.0
+        - 1.0.0
+        - 1.0.0-rc.8
+        - 1.0.0-rc.7
+        - 1.0.0-rc.6
+        - 1.0.0-rc.5
+        - 1.0.0-rc.4
+        - 1.0.0-rc.3
+        - 1.0.0-rc.2
+        - 1.0.0-rc.1
+        - 1.0.0-rc.0
     validations:
       required: true
   - type: dropdown
@@ -46,7 +62,7 @@ body:
       label: Link to your project
       description: |
         Did you already start to work on your project? Can you share it with us?
-      placeholder: ex. https://github.com/Vatis-Tech/asr-client-js-html-js-example
+      placeholder: ex. https://github.com/Vatis-Tech/asr-client-js
   - type: textarea
     id: steps-you-took
     attributes:
@@ -106,7 +122,7 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Vatis-Tech/asr-client-js-html-js-example/blob/main/CODE_OF_CONDUCT.md)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Vatis-Tech/asr-client-js/blob/main/CODE_OF_CONDUCT.md)
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true
