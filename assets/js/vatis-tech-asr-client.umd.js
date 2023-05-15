@@ -15,7 +15,8 @@ var ApiKeyGenerator = /*#__PURE__*/function () {
       responseCallback = _ref.responseCallback,
       apiKey = _ref.apiKey,
       logger = _ref.logger,
-      errorHandler = _ref.errorHandler;
+      errorHandler = _ref.errorHandler,
+      connectionConfig = _ref.connectionConfig;
     (0, _classCallCheck2["default"])(this, ApiKeyGenerator);
     (0, _defineProperty2["default"])(this, "apiUrl", void 0);
     (0, _defineProperty2["default"])(this, "responseCallback", void 0);
@@ -25,6 +26,7 @@ var ApiKeyGenerator = /*#__PURE__*/function () {
     (0, _defineProperty2["default"])(this, "xmlHttp", void 0);
     (0, _defineProperty2["default"])(this, "logger", void 0);
     (0, _defineProperty2["default"])(this, "errorHandler", void 0);
+    (0, _defineProperty2["default"])(this, "connectionConfig", void 0);
     this.errorHandler = errorHandler;
     this.logger = logger;
     this.logger({
@@ -34,6 +36,7 @@ var ApiKeyGenerator = /*#__PURE__*/function () {
     this.apiUrl = apiUrl;
     this.responseCallback = responseCallback;
     this.apiKey = apiKey;
+    this.connectionConfig = connectionConfig;
     this.xmlHttp = new XMLHttpRequest();
     this.xmlHttp.onload = this.onLoad.bind(this);
     this.xmlHttp.onerror = this.onError.bind(this);
@@ -45,9 +48,21 @@ var ApiKeyGenerator = /*#__PURE__*/function () {
         currentState: "@vatis-tech/asr-client-js: Initializing the \"ApiKeyGenerator\" plugin.",
         description: "@vatis-tech/asr-client-js: Here it is where the XMLHttpRequest happens to get a valid key for the LIVE ASR  service."
       });
-      this.xmlHttp.open("GET", this.apiUrl);
-      this.xmlHttp.setRequestHeader("Authorization", "Bearer " + this.apiKey);
-      this.xmlHttp.send();
+      if (this.connectionConfig && this.connectionConfig.service_host !== undefined && this.connectionConfig.auth_token !== undefined && typeof this.connectionConfig.service_host === "string" && typeof this.connectionConfig.auth_token === "string") {
+        this.logger({
+          currentState: "@vatis-tech/asr-client-js: Initialized the \"ApiKeyGenerator\" plugin.",
+          description: "@vatis-tech/asr-client-js: A valid key was received from the Vatis Tech API, in order to use the LIVE ASR service."
+        });
+        var bearer = "Bearer ";
+        this.responseCallback({
+          serviceHost: this.connectionConfig.service_host,
+          authToken: "".concat(this.connectionConfig.auth_token.startsWith(bearer) ? "" : bearer).concat(this.connectionConfig.auth_token)
+        });
+      } else {
+        this.xmlHttp.open("GET", this.apiUrl);
+        this.xmlHttp.setRequestHeader("Authorization", "Bearer " + this.apiKey);
+        this.xmlHttp.send();
+      }
     }
   }, {
     key: "onError",
@@ -199,7 +214,8 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
     var onDataCallback = _ref.onDataCallback,
       logger = _ref.logger,
       microphoneTimeslice = _ref.microphoneTimeslice,
-      errorHandler = _ref.errorHandler;
+      errorHandler = _ref.errorHandler,
+      microphoneDeviceId = _ref.microphoneDeviceId;
     (0, _classCallCheck2["default"])(this, MicrophoneGenerator);
     (0, _defineProperty2["default"])(this, "stream", void 0);
     (0, _defineProperty2["default"])(this, "onDataCallback", void 0);
@@ -207,7 +223,9 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
     (0, _defineProperty2["default"])(this, "blobState", void 0);
     (0, _defineProperty2["default"])(this, "mediaRecorder", void 0);
     (0, _defineProperty2["default"])(this, "microphoneTimeslice", void 0);
+    (0, _defineProperty2["default"])(this, "microphoneDeviceId", void 0);
     (0, _defineProperty2["default"])(this, "errorHandler", void 0);
+    this.microphoneDeviceId = microphoneDeviceId;
     this.errorHandler = errorHandler;
     this.logger = logger;
     this.logger({
@@ -228,12 +246,6 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
     value: function destroy() {
       if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
         this.mediaRecorder.stop();
-        this.onDataCallback({
-          type: SOCKET_IO_CLIENT_MESSAGE_TYPE_DATA,
-          data: "",
-          flush: "True",
-          close: "True"
-        });
       }
       if (this.stream) {
         this.stream.getTracks().forEach(function (track) {
@@ -260,6 +272,7 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
     value: function () {
       var _init = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee() {
         var _this = this;
+        var mediaDevicesOptions;
         return _regenerator["default"].wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
@@ -267,11 +280,32 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
                 currentState: "@vatis-tech/asr-client-js: Initializing the \"MicrophoneGenerator\" plugin.",
                 description: "@vatis-tech/asr-client-js: The MicrophoneGenerator will request for the user's microphone."
               });
-              _context.next = 3;
-              return navigator.mediaDevices.getUserMedia({
+              mediaDevicesOptions = {
                 video: false,
                 audio: true
-              }).then(function (stream) {
+              };
+              if (!(this.microphoneDeviceId && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) {
+                _context.next = 5;
+                break;
+              }
+              _context.next = 5;
+              return navigator.mediaDevices.enumerateDevices().then(function (devices) {
+                var availableDevices = devices.filter(function (device) {
+                  return device.deviceId === _this.microphoneDeviceId;
+                });
+                if (availableDevices.length) {
+                  mediaDevicesOptions.audio = {
+                    deviceId: {
+                      exact: _this.microphoneDeviceId
+                    }
+                  };
+                }
+              })["catch"](function (err) {
+                console.error("".concat(err.name, ": ").concat(err.message));
+              });
+            case 5:
+              _context.next = 7;
+              return navigator.mediaDevices.getUserMedia(mediaDevicesOptions).then(function (stream) {
                 _this.stream = stream;
                 var options = {
                   mimeType: "audio/webm",
@@ -335,7 +369,7 @@ var MicrophoneGenerator = /*#__PURE__*/function () {
                 });
                 _this.errorHandler(err);
               });
-            case 3:
+            case 7:
             case "end":
               return _context.stop();
           }
@@ -445,7 +479,8 @@ var SocketIOClientGenerator = /*#__PURE__*/function () {
       frameOverlap = _ref.frameOverlap,
       bufferOffset = _ref.bufferOffset,
       errorHandler = _ref.errorHandler,
-      config = _ref.config;
+      config = _ref.config,
+      EnableOnCommandFinalFrame = _ref.EnableOnCommandFinalFrame;
     (0, _classCallCheck2["default"])(this, SocketIOClientGenerator);
     (0, _defineProperty2["default"])(this, "socketRef", void 0);
     (0, _defineProperty2["default"])(this, "streamHost", void 0);
@@ -460,9 +495,11 @@ var SocketIOClientGenerator = /*#__PURE__*/function () {
     (0, _defineProperty2["default"])(this, "errorHandler", void 0);
     (0, _defineProperty2["default"])(this, "sendClosePacket", void 0);
     (0, _defineProperty2["default"])(this, "config", void 0);
+    (0, _defineProperty2["default"])(this, "EnableOnCommandFinalFrame", void 0);
     this.errorHandler = errorHandler;
     this.logger = logger;
     this.config = config;
+    this.EnableOnCommandFinalFrame = EnableOnCommandFinalFrame;
     this.logger({
       currentState: "@vatis-tech/asr-client-js: Instantianting the \"SocketIOClientGenerator\" plugin.",
       description: "@vatis-tech/asr-client-js: In this plugin, the connection between @vatis-tech/asr-client-js plugin and Vatis Tech LIVE ASR service is established. This plugin will send the data that is stored inside the MicrophoneQueue to the LIVE ASR service, and will receive the transcript for that data. And on the \"onData\" callback, will send the received transcript."
@@ -505,7 +542,8 @@ var SocketIOClientGenerator = /*#__PURE__*/function () {
           DisableDisfluencies: SOCKET_IO_CLIENT_DISABLE_DISFLUENCIES,
           EnablePunctuationCapitalization: SOCKET_IO_CLIENT_ENABLE_PUNCTUATION_CAPITALIZATION,
           EnableEntitiesRecognition: SOCKET_IO_CLIENT_ENABLE_ENTITIES_RECOGNITION,
-          EnableNumeralsConversion: SOCKET_IO_CLIENT_ENABLE_NUMERALS_CONVERSION
+          EnableNumeralsConversion: SOCKET_IO_CLIENT_ENABLE_NUMERALS_CONVERSION,
+          EnableOnCommandFinalFrame: this.EnableOnCommandFinalFrame
         }
       });
       this.socketRef.on("connect", function () {
@@ -832,7 +870,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var WAIT_AFTER_MESSAGES = _index["default"].WAIT_AFTER_MESSAGES,
   SOCKET_IO_CLIENT_MESSAGE_TYPE_DATA = _index["default"].SOCKET_IO_CLIENT_MESSAGE_TYPE_DATA,
   SOCKET_IO_SERVER_MESSAGE_TYPE_CONFIG_APPLIED = _index["default"].SOCKET_IO_SERVER_MESSAGE_TYPE_CONFIG_APPLIED,
-  SOCKET_IO_CLIENT_RESPONSE_FINAL_FRAME = _index["default"].SOCKET_IO_CLIENT_RESPONSE_FINAL_FRAME;
+  SOCKET_IO_CLIENT_RESPONSE_FINAL_FRAME = _index["default"].SOCKET_IO_CLIENT_RESPONSE_FINAL_FRAME,
+  MICROPHONE_TIMESLICE = _index["default"].MICROPHONE_TIMESLICE;
 var generateApiUrl = _index2["default"].generateApiUrl,
   checkIfFinalPacket = _index2["default"].checkIfFinalPacket,
   checkIfCommandPacket = _index2["default"].checkIfCommandPacket;
@@ -857,7 +896,10 @@ var VatisTechClient = /*#__PURE__*/function () {
       config = _ref.config,
       onConfig = _ref.onConfig,
       onPartialData = _ref.onPartialData,
-      onFinalData = _ref.onFinalData;
+      onFinalData = _ref.onFinalData,
+      EnableOnCommandFinalFrame = _ref.EnableOnCommandFinalFrame,
+      connectionConfig = _ref.connectionConfig,
+      microphoneDeviceId = _ref.microphoneDeviceId;
     (0, _classCallCheck2["default"])(this, VatisTechClient);
     (0, _defineProperty2["default"])(this, "microphoneGenerator", void 0);
     (0, _defineProperty2["default"])(this, "instanceReservation", void 0);
@@ -877,6 +919,23 @@ var VatisTechClient = /*#__PURE__*/function () {
     (0, _defineProperty2["default"])(this, "onConfig", void 0);
     (0, _defineProperty2["default"])(this, "onPartialData", void 0);
     (0, _defineProperty2["default"])(this, "onFinalData", void 0);
+    (0, _defineProperty2["default"])(this, "EnableOnCommandFinalFrame", void 0);
+    (0, _defineProperty2["default"])(this, "flushPacketWasSent", void 0);
+    (0, _defineProperty2["default"])(this, "connectionConfig", void 0);
+    (0, _defineProperty2["default"])(this, "microphoneTimeslice", void 0);
+    (0, _defineProperty2["default"])(this, "microphoneDeviceId", void 0);
+    this.microphoneDeviceId = microphoneDeviceId;
+    if (microphoneTimeslice) {
+      this.microphoneTimeslice = microphoneTimeslice;
+    } else {
+      this.microphoneTimeslice = MICROPHONE_TIMESLICE;
+    }
+    this.flushPacketWasSent = false;
+    if (EnableOnCommandFinalFrame === true) {
+      this.EnableOnCommandFinalFrame = true;
+    } else {
+      this.EnableOnCommandFinalFrame = false;
+    }
     if (config) {
       this.config = config;
     } else {
@@ -973,7 +1032,8 @@ var VatisTechClient = /*#__PURE__*/function () {
       responseCallback: this.initInstanceReservation.bind(this),
       apiKey: apiKey,
       logger: this.logger.bind(this),
-      errorHandler: this.errorHandler
+      errorHandler: this.errorHandler,
+      connectionConfig: connectionConfig
     });
 
     // instantiante InstanceReservation - this will return on the responseCallback the streamUrl, reservationToken, and podName for the SocketIOClientGenerator to connect based on the serviceHost and authToken
@@ -993,7 +1053,8 @@ var VatisTechClient = /*#__PURE__*/function () {
       config: this.config,
       frameLength: frameLength,
       frameOverlap: frameOverlap,
-      bufferOffset: bufferOffset
+      bufferOffset: bufferOffset,
+      EnableOnCommandFinalFrame: EnableOnCommandFinalFrame
     });
 
     // instantiante MicrophoneGenerator - this will return on the this.onMicrophoneGeneratorDataCallback the data that it captures from the user's microphone
@@ -1001,7 +1062,8 @@ var VatisTechClient = /*#__PURE__*/function () {
       onDataCallback: this.onMicrophoneGeneratorDataCallback.bind(this),
       logger: this.logger.bind(this),
       errorHandler: this.errorHandler,
-      microphoneTimeslice: microphoneTimeslice
+      microphoneTimeslice: microphoneTimeslice,
+      microphoneDeviceId: microphoneDeviceId
     });
 
     // initilize ApiKeyGenerator (if successful it will initilize SocketIOClientGenerator (if successful it will initilize the MicrophoneGenerator))
@@ -1016,18 +1078,11 @@ var VatisTechClient = /*#__PURE__*/function () {
           hard: false
         },
         hard = _ref2.hard;
-      // check if there is still data to be received or to be sent
-      if ((this.waitingForFinalPacket > 0 || !this.microphoneQueue.isEmpty) && hard !== true) {
-        // let the messaging know that we want the client to be destroyed
-        this.shouldDestroy = true;
-        // pause the microphone so it won't record anymore
-        this.microphoneGenerator.pause();
-      } else {
+      // stop the microphone - i.e. stop data being recorded by the MediaRecorder
+      this.microphoneGenerator.destroy();
+      if (hard) {
         // notify destruction
         this.onDestroyCallback();
-
-        // stop the microphone - i.e. stop data being recorded by the MediaRecorder
-        this.microphoneGenerator.destroy();
 
         // destroy the socket
         this.socketIOClientGenerator.destroy();
@@ -1052,6 +1107,23 @@ var VatisTechClient = /*#__PURE__*/function () {
         this.onMicrophoneGeneratorDataCallback = false;
         this.onSocketIOClientGeneratorOnAsrResultCallback = false;
         this.onDestroyCallback = false;
+      } else {
+        // let the messaging know that we want the client to be destroyed
+        this.shouldDestroy = true;
+        setTimeout(function () {
+          this.socketIOClientGenerator.emitData({
+            type: SOCKET_IO_CLIENT_MESSAGE_TYPE_DATA,
+            data: "",
+            flush: "True",
+            close: "True"
+          });
+          this.flushPacketWasSent = true;
+          if (this.waitingForFinalPacket < 0) {
+            this.waitingForFinalPacket = 1;
+          } else {
+            this.waitingForFinalPacket = this.waitingForFinalPacket + 1;
+          }
+        }.bind(this), this.microphoneTimeslice + 100);
       }
     }
 
@@ -1174,8 +1246,10 @@ var VatisTechClient = /*#__PURE__*/function () {
       }
 
       // check if the user tried to destroy the VTC client
-      if (this.waitingForFinalPacket === 0 && this.microphoneQueue.isEmpty && this.shouldDestroy) {
-        this.destroy();
+      if (this.waitingForFinalPacket === 0 && this.microphoneQueue.isEmpty && this.shouldDestroy && this.flushPacketWasSent) {
+        this.destroy({
+          hard: true
+        });
       }
     }
   }]);
